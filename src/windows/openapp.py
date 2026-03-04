@@ -46,7 +46,7 @@ def _filter_apps(apps: list[dict]) -> list[dict]:
     useful : list[dict] = []
 
     IGNORE_KEYWORDS = ("uninstall", "setup", "installer",
-                       "帮助", "帮助文档", "documentation", "readme")
+                       "help", "help_doc", "documentation", "readme")
 
     for app in apps:
         exe = app.get("exe") or ""

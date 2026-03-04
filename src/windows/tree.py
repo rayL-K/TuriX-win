@@ -31,10 +31,10 @@ class WindowsUITreeBuilder:
         screenshot = self.capture_screenshot()
         img_np = np.array(screenshot)
 
-        # 使用 PIL 在图像上绘制红框
+        # Use PIL to draw red bounding boxes on the image
         draw = ImageDraw.Draw(screenshot)
         try:
-            # Arial 或默认字体
+            # Arial or default font
             font = ImageFont.truetype("arial.ttf", 16)
         except:
             font = ImageFont.load_default()
@@ -44,13 +44,13 @@ class WindowsUITreeBuilder:
                 x, y = element.position
                 w, h = element.size
                 
-                # 绘制矩形边框
+                # Draw rectangle border
                 draw.rectangle([x, y, x + w, y + h], outline="red", width=2)
                 
-                # 绘制文本
+                # Draw index text
                 idx_str = str(element.highlight_index)
                 
-                # 绘制文本背景底色
+                # Draw background for the text
                 text_bbox = draw.textbbox((x, y), idx_str, font=font)
                 draw.rectangle([text_bbox[0], text_bbox[1], text_bbox[2], text_bbox[3]], fill="red")
                 draw.text((x, y), idx_str, font=font, fill="white")
@@ -63,7 +63,7 @@ class WindowsUITreeBuilder:
         
 
     def _is_interactive(self, control: auto.Control) -> bool:
-        # 检查标准的可交互控件角色类型
+        # Check for standard interactive control types
         interactive_roles = [
             auto.ControlType.ButtonControl,
             auto.ControlType.CheckBoxControl,
@@ -82,7 +82,7 @@ class WindowsUITreeBuilder:
         self.reset_state()
         
         if pid:
-            # 通过进程 ID 查找对应的窗口
+            # Find the window by process ID
             auto.SetGlobalSearchTimeout(1.0)
             root_control = auto.WindowControl(searchDepth=1, ProcessId=pid)
             if not root_control.Exists(0, 0):
@@ -102,14 +102,14 @@ class WindowsUITreeBuilder:
                 w, h = r - x, b - y
                 on_screen = True
                 
-                # 简单的屏幕内可见性检查
+                # Simple on-screen visibility check
                 if w <= 0 or h <= 0 or x >= screen_w or y >= screen_h or r <= 0 or b <= 0:
                     on_screen = False
 
                 if control.IsOffscreen:
                     on_screen = False
 
-                # 略过完全隐藏的子树，加快处理速度并防止 Token 爆炸
+                # Skip completely hidden subtrees to optimize speed and prevent token explosion
                 if not on_screen and depth > 1:
                     return None
 
@@ -147,7 +147,7 @@ class WindowsUITreeBuilder:
                 else:
                     node.highlight_index = None
 
-                # 递归处理子节点
+                # Recursively process child nodes
                 for child in control.GetChildren():
                     child_node = process_control(child, depth + 1)
                     if child_node:
@@ -164,14 +164,14 @@ class WindowsUITreeBuilder:
 
         root_node = process_control(root_control, 0)
         
-        # 退避的空根节点
+        # Fallback empty root node
         if not root_node:
            root_node = WindowsElementNode(role="Root", identifier="", attributes={}, is_visible=True, app_pid=0, on_screen=True) 
 
         return root_node
         
     def get_vision_context(self):
-        """获取界面树及打上视觉标记的截图与文本信息"""
+        """Capture the UI tree and annotated screenshot with textual information"""
         root = self.build_tree()
         if root is None:
             return None, ""

@@ -6,8 +6,8 @@ import logging
 logger = logging.getLogger(__name__)
 @dataclass
 class WindowsElementNode:
-    """表示具有增强辅助信息的 Windows 界面元素节点"""
-    # 必填字段
+    """Simplified Windows UI element node with enhanced accessibility information"""
+    # Required fields
     role: str
     identifier: str
     attributes: Dict[str, Any]
@@ -15,7 +15,7 @@ class WindowsElementNode:
     app_pid: int
     on_screen: bool
 
-    # 可选字段
+    # Optional fields
     children: List['WindowsElementNode'] = field(default_factory=list)
     parent: Optional['WindowsElementNode'] = None
     is_interactive: bool = False
@@ -24,36 +24,36 @@ class WindowsElementNode:
 
     @property
     def actions(self) -> List[str]:
-        """获取此元素适用的交互动作列表。"""
+        """Get the list of interactive actions applicable to this element."""
         list_actions = self.attributes.get('actions', [])
         return list_actions
 
     @property
     def enabled(self) -> bool:
-        """检查该元素是否已被启用。"""
+        """Check if the element is enabled."""
         return self.attributes.get('enabled', True)
 
     @property
     def position(self) -> Optional[tuple]:
-        """获取元素的屏幕坐标位置。"""
+        """Get the screen coordinates of the element."""
         return self.attributes.get('position')
 
     @property
     def size(self) -> Optional[tuple]:
-        """获取元素的尺寸。"""
+        """Get the size of the element."""
         return self.attributes.get('size')
 
     def __repr__(self) -> str:
-        """包含更多属性信息的增强型字符串表示形式。"""
+        """Detailed string representation including more attributes."""
         role_str = f'<{self.role}'
 
-        # 将重要属性添加到字符串中
+        # Add important attributes to the string
         important_attrs = ['title', 'value', 'description', 'enabled']
         for key in important_attrs:
             if key in self.attributes:
                 role_str += f' {key}="{self.attributes[key]}"'
 
-        # 附加坐标与尺寸
+        # Append coordinates and size
         if self.position:
             role_str += f' pos={self.position}'
         if self.size:
@@ -61,7 +61,7 @@ class WindowsElementNode:
 
         role_str += '>'
 
-        # 附加状态提示标签
+        # Append state labels
         extras = []
         if self.is_interactive:
             extras.append('interactive')
@@ -78,18 +78,18 @@ class WindowsElementNode:
         return role_str
 
     # ------------------------------------------------------------------------
-    # 内部方法：一种结构紧凑的元素表示短语（供“短版本”界面视图使用）
+    # Helper: A compact element representation for short UI views
     # ------------------------------------------------------------------------
     def _format_short_element(self) -> str:
         """
-        生成一个简短、干净的摘要字符串：
-         - 使用 highlight_index 或 '_' 作为前缀
-         - UI 角色类别
-         - 如果存在标题或描述，则予以显示
-         - 括号中的位置/尺寸
-         - 如果可交互，显示具备的操作
+        Generate a short, clean summary string:
+         - Prefix with highlight_index or '_'
+         - UI role
+         - Title or description if available
+         - Position and size in brackets
+         - Available actions if interactive
         """
-        # 前缀决定：如果是由于上下文被附加到屏幕的则用下划线占位
+        # Prefix: use underscore if the element is added as context
         prefix = f'{self.highlight_index}' if self.highlight_index is not None else '_'
         # Basic role
         role_part = f'<{self.role}'
@@ -108,7 +108,7 @@ class WindowsElementNode:
 
         role_part += '>'
 
-        # 如果交互的，顺势提及操作方法
+        # If interactive, include actions
         extras = []
         if self.is_interactive:
             extras.append('interactive')
@@ -121,13 +121,13 @@ class WindowsElementNode:
         return f'{prefix}[:]{role_part}'
 
     # ------------------------------------------------------------------------
-    # 1) 包含较多详细信息的“精简”版本
+    # 1) Short version focusing on interaction and context
     # ------------------------------------------------------------------------
     def _get_visible_clickable_elements_string_short(self) -> str:
-        """将 UI 树转换为字符串，仅关注支持交互以及提供上下文描述的元素"""
+        """Convert UI tree to string focusing on interactive and context elements"""
         formatted_text = []
         def process_node(node: 'WindowsElementNode', depth: int) -> None:
-            # 拼接属性字符串
+            # Concatenate attributes
             if not node.highlight_index or not node.on_screen:
                 pass
             elif node.role in ['AXStaticText', 'AXGroup', 'AXImage']:
@@ -160,16 +160,16 @@ class WindowsElementNode:
         return '\n'.join(formatted_text)
 
     # ------------------------------------------------------------------------
-    # 2) 细节最丰富的“原始”版本
+    # 2) Original detailed version
     # ------------------------------------------------------------------------
     def _get_visible_clickable_elements_string_original(self) -> str:
         """
-        原始长版本：
-        返回界面遍历节点的各种属性、坐标点和交互上下文。
+        Original detailed version:
+        Returns attributes, coordinates, and context for the traversal nodes.
         """
         formatted_text = []
         def process_node(node: 'WindowsElementNode', depth: int) -> None:
-            # 构建节点属性串
+            # Build node attribute string
             if not node.on_screen:
                 pass
             else:
@@ -194,11 +194,11 @@ class WindowsElementNode:
                         f'{node.highlight_index}[:]<{node.role}{attrs_str}> [interactive]'
                     )
                     
-                # 检测当前是不是能提供信息的上下文元素（仅作文本补充说明，无须支持打标和交互）
+                # Check if it's an informative context element (not interactive)
                 if (node.role in ['AXStaticText', 'AXTextField', 'TextControl', 'ImageControl'] and 
                       not node.is_interactive and 
                       (node.parent is None or node.parent.role in ['AXWindow', 'WindowControl'] or node.parent.is_interactive)):
-                    # 不可交互仅供大模型阅读上下文的条目使用下划线 "_" 索引
+                    # Use underscore for non-interactive context elements
                     
                     attrs_str = ''
                     important_attrs = ['title', 'value', 'description', 'enabled','position','size']
@@ -230,16 +230,16 @@ class WindowsElementNode:
             return len(text) // estimated_tokens_per_character
         total_tokens = count_tokens(self._get_visible_clickable_elements_string_original())
         if total_tokens > 10000:
-            # 返回折叠版字符串
-            logger.debug('界面文本提取超长 (Token > 10000)，降级到短版本输出。')
+            # Return collapsed version
+            logger.debug('UI tree text too long (> 10000 tokens), falling back to short version.')
             return ''
         else:
-            # 返回原始长版本字符串
-            logger.debug(f'占用 Token 数为 {total_tokens}，使用完整原版界面树结构。')
+            # Return original long version string
+            logger.debug(f'Token count: {total_tokens}, using full original UI tree structure.')
             return self._get_visible_clickable_elements_string_short()
         
     def get_detailed_info(self) -> str:
-        """返回包含该元素所有属性的详细字符串。"""
+        """Return a detailed string containing all attributes."""
         details =[
             f"Role: {self.role}",
             f"Identifier: {self.identifier}",
@@ -264,7 +264,7 @@ class WindowsElementNode:
         return ", ".join(details)
 
     def get_detailed_string(self, indent: int = 0) -> str:
-        """递归构建界面节点树的多级属性字符串表示。"""
+        """Recursively build a multi-level attribute string for the node tree."""
         spaces = " " * indent
         result = (
             f"{spaces}{self.__repr__()}\n{spaces}Details: {self.get_detailed_info()}"
@@ -275,20 +275,20 @@ class WindowsElementNode:
 
     @cached_property
     def accessibility_path(self) -> str:
-        """生成指向此元素的独有辅助功能路径（包括更多修饰符）"""
+        """Generate a unique accessibility path for this element."""
         path_components = []
         current = self
         while current.parent is not None:
             role = current.role
 
-            # 加上标识符使路径具有特异性
+            # Add identifiers for path specificity
             identifiers = []
             if 'title' in current.attributes:
                 identifiers.append(f"title={current.attributes['title']}")
             if 'description' in current.attributes:
                 identifiers.append(f"desc={current.attributes['description']}")
 
-            # 统计拥有共同类型的兄弟节点
+            # Count siblings with the same role
             siblings = [s for s in current.parent.children if s.role == role]
             if len(siblings) > 1:
                 idx = siblings.index(current) + 1
@@ -296,7 +296,7 @@ class WindowsElementNode:
             else:
                 path_component = role
 
-            # 如果标识符存在即拼接到路径串中
+            # Append identifier if it exists
             if identifiers:
                 path_component += f"({','.join(identifiers)})"
 
@@ -307,7 +307,7 @@ class WindowsElementNode:
         return '/' + '/'.join(path_components)
 
     def find_element_by_path(self, path: str) -> Optional['WindowsElementNode']:
-        """根据辅助路径寻找目标元素节点。"""
+        """Find an element node by its accessibility path."""
         if self.accessibility_path == path:
             return self
         for child in self.children:
@@ -317,7 +317,7 @@ class WindowsElementNode:
         return None
 
     def find_elements_by_action(self, action: str) -> List['WindowsElementNode']:
-        """通过指定行为动作匹配对应的所有元素节点。"""
+        """Find all element nodes by a specific action."""
         elements = []
         if action in self.actions:
             elements.append(self)

@@ -66,7 +66,7 @@ class Controller:
 
 			user_input = app_name
 			if user_input.lower() == 'wechat':
-				user_input = '微信'
+				user_input = '微信' # Map to Chinese name for local Windows search
 			success, _ = await open_application_by_name(user_input)
 			logger.info(f"\nLaunching app: {user_input}...")			
 			if not success:
@@ -111,7 +111,7 @@ class Controller:
 				'cmd': 'ctrl',
 				'delete': 'backspace'
 			}
-			# 映射键名
+			# Key name mapping
 			def map_key(key: str) -> str:
 				return key_map.get(key.lower(), key)
 			
