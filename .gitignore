@@ -40,13 +40,3 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# Project specific
-AgentHistory.json
-images/
-memory.jsonl
-brain/
-walkthrough.md
-implementation_plan.md
-task.md
-pr_description.md
-selling_points.md
